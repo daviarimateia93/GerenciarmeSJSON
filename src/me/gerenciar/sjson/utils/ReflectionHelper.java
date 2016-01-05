@@ -2,13 +2,71 @@ package me.gerenciar.sjson.utils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public class ReflectionHelper
 {
+	public static Field getField(String fieldName, Class<?> type)
+	{
+		try
+		{
+			return type.getDeclaredField(fieldName);
+		}
+		catch(NoSuchFieldException | SecurityException exception)
+		{
+			List<Field> fields = getFields(type);
+			
+			for(Field field : fields)
+			{
+				if(field.getName().equals(fieldName))
+				{
+					return field;
+				}
+			}
+			
+			return null;
+		}
+	}
+	
+	public static void setValue(String fieldName, Object instance, Object value)
+	{
+		Field field = ReflectionHelper.getField(fieldName, instance.getClass());
+		
+		if(field != null)
+		{
+			try
+			{
+				field.setAccessible(true);
+				field.set(instance, value);
+			}
+			catch(IllegalArgumentException | IllegalAccessException exception)
+			{
+				
+			}
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static <T> T getValue(String fieldName, Object instance)
+	{
+		try
+		{
+			Field field = getField(fieldName, instance.getClass());
+			field.setAccessible(true);
+			
+			return field != null ? (T) field.get(instance) : null;
+		}
+		catch(IllegalArgumentException | IllegalAccessException | SecurityException exception)
+		{
+			return null;
+		}
+	}
+	
 	public static List<Field> getFields(Object instance)
 	{
 		List<Field> fields = new ArrayList<>();
@@ -39,6 +97,40 @@ public class ReflectionHelper
 		{
 			getFields(fields, type.getSuperclass());
 		}
+	}
+	
+	public static List<Field> getEnumFieldsConstants(Class<?> type)
+	{
+		List<Field> enumFieldsConstants = new ArrayList<>();
+		
+		List<Field> fields = getFields(type);
+		
+		for(Field field : fields)
+		{
+			if(field.isEnumConstant())
+			{
+				enumFieldsConstants.add(field);
+			}
+		}
+		
+		return enumFieldsConstants;
+	}
+	
+	public static String fieldToName(Field field)
+	{
+		return field.getName();
+	}
+	
+	public static List<String> fieldsToNames(Collection<Field> fields)
+	{
+		List<String> names = new ArrayList<>();
+		
+		for(Field field : fields)
+		{
+			names.add(fieldToName(field));
+		}
+		
+		return names;
 	}
 	
 	public static boolean isNull(Field field, Object instance) throws IllegalArgumentException, IllegalAccessException
@@ -188,6 +280,7 @@ public class ReflectionHelper
 		}
 	}
 	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static Object generateBasicValue(String value, Class<?> type)
 	{
 		if(value != null)
@@ -227,6 +320,22 @@ public class ReflectionHelper
 			else if(Byte.class.isAssignableFrom(type))
 			{
 				return Byte.valueOf(value);
+			}
+			else if(Enum.class.isAssignableFrom(type))
+			{
+				List<Field> fields = getEnumFieldsConstants(type);
+				
+				for(Field field : fields)
+				{
+					field.setAccessible(true);
+					
+					if(field.getName().equals(value))
+					{
+						return Enum.valueOf((Class<? extends Enum>) type, value);
+					}
+				}
+				
+				return null;
 			}
 			else
 			{
@@ -292,6 +401,46 @@ public class ReflectionHelper
 		else
 		{
 			return null;
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static <T> T invoke(Object instance, String methodName, Object... args) throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
+	{
+		List<Class<?>> parameterTypes = new ArrayList<>();
+		
+		for(Object arg : args)
+		{
+			parameterTypes.add(arg.getClass());
+		}
+		
+		try
+		{
+			return (T) instance.getClass().getMethod(methodName, parameterTypes.toArray(new Class<?>[parameterTypes.size()])).invoke(instance, args);
+		}
+		catch(NoSuchMethodException noSuchMethodException)
+		{
+			Method[] methods = instance.getClass().getMethods();
+			
+			if(methods != null)
+			{
+				for(Method method : methods)
+				{
+					try
+					{
+						if(method.getName().equals(methodName))
+						{
+							return (T) method.invoke(instance, args);
+						}
+					}
+					catch(Exception exception)
+					{
+						
+					}
+				}
+			}
+			
+			throw noSuchMethodException;
 		}
 	}
 }
