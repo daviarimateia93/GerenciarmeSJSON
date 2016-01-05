@@ -4,8 +4,6 @@ import me.gerenciar.sjson.entity.Person;
 
 public class DSimpleJson
 {
-	public static final String namespace = "com.daviarimateia.dsimplejson";
-	
 	public static void main(String args[])
 	{
 		String personSource = "{\"name\":\"Davi de Sousa Arimateia\",\"age\":21,\"salary\":5400.0,\"birthday\":\"2014-09-17T17:26Z\",\"car\":{\"model\":\"New Fiesta Titanium Powershift\",\"brand\":\"Ford\",\"value\":53000.0},\"intArray\":[ [ 1, 10, 100, 1000 ], [ 1, 10, 100, 1000 ], [ 1, 10, 100, 1000 ]],\"map\":{\"car2\":{\"model\":\"New Fiesta Titanium Powershift\",\"brand\":\"Ford\",\"value\":53000.0},\"car3\":{\"model\":\"New Fiesta Titanium Powershift\",\"brand\":\"Ford\",\"value\":53000.0},\"car1\":{\"model\":\"New Fiesta Titanium Powershift\",\"brand\":\"Ford\",\"value\":53000.0}},\"list\":null,\"cars\":[{\"model\":\"New Fiesta Titanium Powershift\",\"brand\":\"Ford\",\"value\":53000.0},{\"model\":\"New Fiesta Titanium Powershift\",\"brand\":\"Ford\",\"value\":53000.0},{\"model\":\"New Fiesta Titanium Powershift\",\"brand\":\"Ford\",\"value\":53000.0}], \"numbers\":[[[1,2,3,4, 5],[1,2,3],[1,2,3],[1,2,3]], [[1,2,3],[1,2,3],[1,2,3]]], \"hashList\":[{\"key1\":\"value1\", \"key2\":\"value2\"}]}";
