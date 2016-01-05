@@ -17,7 +17,7 @@ import java.util.TreeMap;
 
 import me.gerenciar.sjson.annotation.Polymorphism;
 import me.gerenciar.sjson.gateway.Gateway;
-import me.gerenciar.sjson.utils.ReflectionHelper;
+import me.gerenciar.sjson.util.ReflectionHelper;
 
 public class Reader
 {

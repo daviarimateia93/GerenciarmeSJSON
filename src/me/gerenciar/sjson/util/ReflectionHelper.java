@@ -1,4 +1,4 @@
-package me.gerenciar.sjson.utils;
+package me.gerenciar.sjson.util;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;

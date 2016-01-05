@@ -47,4 +47,16 @@ public abstract class Gateway implements Serializable
 	{
 		return writer.write(this);
 	}
+	
+	@Override
+	public int hashCode()
+	{
+		return toString().hashCode();
+	}
+	
+	@Override
+	public boolean equals(Object object)
+	{
+		return object != null ? toString().equals(object.toString()) : false;
+	}
 }

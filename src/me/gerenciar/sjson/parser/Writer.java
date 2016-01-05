@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.Set;
 
 import me.gerenciar.sjson.gateway.Gateway;
-import me.gerenciar.sjson.utils.ReflectionHelper;
+import me.gerenciar.sjson.util.ReflectionHelper;
 
 public class Writer
 {
