@@ -36,6 +36,10 @@ public class Reader
 		static final int ACTION_SEPARATOR_ATTRIBUTE_NAME_BEGIN = 256; // "
 		static final int ACTION_SEPARATOR_ATTRIBUTE_NAME_END = 512; // "
 		
+		static final String VALUE_TYPE_NUMBER = "NUMBER";
+		static final String VALUE_TYPE_BOOLEAN = "BOOLEAN";
+		static final String VALUE_TYPE_STRING = "STRING";
+		
 		int action;
 		String name;
 		String value;
@@ -54,7 +58,7 @@ public class Reader
 	
 	public Reader()
 	{
-		
+	
 	}
 	
 	protected boolean isReadable(Field field, Gateway instance)
@@ -74,7 +78,7 @@ public class Reader
 			
 			return instance;
 		}
-		catch(InstantiationException | IllegalAccessException e)
+		catch(InstantiationException | IllegalAccessException exception)
 		{
 			return null;
 		}
@@ -93,7 +97,7 @@ public class Reader
 				{
 					if(instance.object instanceof Gateway)
 					{
-						Field field = instance.object.getClass().getField(entry.getKey());
+						Field field = ReflectionHelper.getField(entry.getKey(), instance.object.getClass());
 						
 						if(field != null)
 						{
@@ -211,20 +215,62 @@ public class Reader
 					{
 						instance.object = dateFormat.parse(mapItem.toString());
 					}
-					catch(ParseException e)
+					catch(ParseException exception)
 					{
 						// ignore, let it be null
 					}
 				}
 				else
 				{
-					instance.object = ReflectionHelper.generateBasicValue(mapItem.toString(), instance.object);
+					if(mapItem != null)
+					{
+						String mapItemAsString = mapItem.toString();
+						int indexOfMapItemSeparator = mapItemAsString.indexOf(";");
+						String mapItemType = mapItemAsString.substring(0, indexOfMapItemSeparator);
+						String mapItemValue = mapItemAsString.substring(indexOfMapItemSeparator + 1, mapItemAsString.length());
+						Class<?> mapItemTypeType = null;
+						
+						if(instance.object == null)
+						{
+							switch(mapItemType)
+							{
+								case Command.VALUE_TYPE_BOOLEAN:
+								{
+									mapItemTypeType = Boolean.class;
+									break;
+								}
+								
+								case Command.VALUE_TYPE_NUMBER:
+								{
+									mapItemTypeType = Double.class;
+									break;
+								}
+								
+								case Command.VALUE_TYPE_STRING:
+								{
+									mapItemTypeType = String.class;
+									break;
+								}
+							}
+							
+							if(mapItemTypeType != null)
+							{
+								instance.object = newInstance(mapItemTypeType);
+							}
+						}
+						
+						instance.object = ReflectionHelper.generateBasicValue(mapItemValue, instance.object);
+					}
+					else
+					{
+						instance.object = null;
+					}
 				}
 			}
 		}
-		catch(NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e)
+		catch(SecurityException | IllegalArgumentException | IllegalAccessException exception)
 		{
-			e.printStackTrace();
+			exception.printStackTrace();
 		}
 	}
 	
@@ -236,7 +282,7 @@ public class Reader
 		{
 			newInstance = field.get(instance);
 		}
-		catch(IllegalArgumentException | IllegalAccessException e)
+		catch(IllegalArgumentException | IllegalAccessException exception)
 		{
 			// ignore
 		}
@@ -310,25 +356,30 @@ public class Reader
 				{
 					newInstance = Class.forName(className).newInstance();
 				}
-				catch(ClassNotFoundException | InstantiationException | IllegalAccessException e)
+				catch(ClassNotFoundException | InstantiationException | IllegalAccessException exception)
 				{
 					newInstance = ReflectionHelper.generateDefaultValue(field.getType());
 				}
 			}
 			else
 			{
-				try
-				{
-					newInstance = field.getType().newInstance();
-				}
-				catch(IllegalAccessException | InstantiationException e)
-				{
-					newInstance = ReflectionHelper.generateDefaultValue(field.getType());
-				}
+				newInstance = newInstance(field.getType());
 			}
 		}
 		
 		return newInstance;
+	}
+	
+	private Object newInstance(Class<?> type)
+	{
+		try
+		{
+			return type.newInstance();
+		}
+		catch(IllegalAccessException | InstantiationException exception)
+		{
+			return ReflectionHelper.generateDefaultValue(type);
+		}
 	}
 	
 	private TreeMap<String, Object> parse(String source)
@@ -567,7 +618,9 @@ public class Reader
 					i--;
 				}
 				
-				command.value = attributeValue.toString();
+				String type = hasQuotes ? Command.VALUE_TYPE_STRING : "false".equalsIgnoreCase(attributeValue.toString()) || "true".equalsIgnoreCase(attributeValue.toString()) ? Command.VALUE_TYPE_BOOLEAN : Command.VALUE_TYPE_NUMBER;
+				
+				command.value = !hasQuotes && "null".equalsIgnoreCase(attributeValue.toString()) ? null : type + ";" + attributeValue.toString();
 				command.action = Command.ACTION_SEPARATOR_ATTRIBUTE | Command.ACTION_END_OBJECT | Command.ACTION_END_ARRAY;
 				
 				if(mapValues.peek() instanceof TreeMap)

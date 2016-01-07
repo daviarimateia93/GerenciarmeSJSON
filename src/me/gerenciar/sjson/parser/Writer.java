@@ -54,7 +54,7 @@ public class Writer
 					
 					serializedFields++;
 				}
-				catch(IllegalArgumentException | IllegalAccessException e)
+				catch(IllegalArgumentException | IllegalAccessException exception)
 				{
 					writeNull(stringBuilder);
 				}
