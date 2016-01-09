@@ -9,29 +9,34 @@ public abstract class Gateway implements Serializable
 {
 	private transient static final long serialVersionUID = -2498129071535935413L;
 	
+	protected String className;
 	private transient Reader reader;
 	private transient Writer writer;
 	
 	public Gateway()
 	{
+		className = getClass().getName();
 		reader = new Reader();
 		writer = new Writer();
 	}
 	
 	public Gateway(Reader reader)
 	{
+		this.className = getClass().getName();
 		this.reader = reader;
-		writer = new Writer();
+		this.writer = new Writer();
 	}
 	
 	public Gateway(Writer writer)
 	{
-		reader = new Reader();
+		this.className = getClass().getName();
+		this.reader = new Reader();
 		this.writer = writer;
 	}
 	
 	public Gateway(Reader reader, Writer writer)
 	{
+		this.className = getClass().getName();
 		this.reader = reader;
 		this.writer = writer;
 	}

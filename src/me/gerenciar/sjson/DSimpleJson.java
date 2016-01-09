@@ -1,24 +1,32 @@
 package me.gerenciar.sjson;
 
+import me.gerenciar.sjson.entity.Person;
+import me.gerenciar.sjson.entity.Peugeot208;
 import me.gerenciar.sjson.entity.Request;
 
 public class DSimpleJson
 {
 	public static void main(String args[])
 	{
-		/*
+		
 		String personSource = "{\"name\":\"Davi de Sousa Arimateia\",\"age\":21,\"salary\":5400.0,\"birthday\":\"2014-09-17T17:26Z\",\"car\":{\"model\":\"New Fiesta Titanium Powershift\",\"brand\":\"Ford\",\"value\":53000.0},\"intArray\":[ [ 1, 10, 100, 1000 ], [ 1, 10, 100, 1000 ], [ 1, 10, 100, 1000 ]],\"map\":{\"car2\":{\"model\":\"New Fiesta Titanium Powershift\",\"brand\":\"Ford\",\"value\":53000.0},\"car3\":{\"model\":\"New Fiesta Titanium Powershift\",\"brand\":\"Ford\",\"value\":53000.0},\"car1\":{\"model\":\"New Fiesta Titanium Powershift\",\"brand\":\"Ford\",\"value\":53000.0}},\"list\":null,\"cars\":[{\"model\":\"New Fiesta Titanium Powershift\",\"brand\":\"Ford\",\"value\":53000.0},{\"model\":\"New Fiesta Titanium Powershift\",\"brand\":\"Ford\",\"value\":53000.0},{\"model\":\"New Fiesta Titanium Powershift\",\"brand\":\"Ford\",\"value\":53000.0}], \"numbers\":[[[1,2,3,4, 5],[1,2,3],[1,2,3],[1,2,3]], [[1,2,3],[1,2,3],[1,2,3]]], \"hashList\":[{\"key1\":\"value1\", \"key2\":\"value2\"}]}";
 		
 		Person person = new Person().toObject(personSource);
 		System.out.println(person);
 		
-		Request request = new Request("me.gerenciar.sjson.DSimpleJson", "main", "arg1", "arg2");
-		System.out.println(request);
-		*/
+		Peugeot208 p = new Peugeot208();
+		p.brand = "peugeot";
+		p.model = "208";
+		p.value = 10000f;
 		
-		String requestSource = "{\"className\":\"irose.server.AccountService\",\"methodName\":null,\"params\":[\"teste\",123],\"paramsClassNames\":[\"java.lang.String\",\"java.lang.String\"]}";
-		Request request = new Request().toObject(requestSource);
+		Request request = new Request("me.gerenciar.sjson.DSimpleJson", "main", "arg1", p);
 		System.out.println(request);
+				
+		
+		String requestSource = "{\"className\":\"me.gerenciar.sjson.DSimpleJson\",\"methodName\":\"main\",\"params\":[\"arg1\",{\"model\":\"208\",\"brand\":\"peugeot\",\"value\":10000.0,\"className\":\"me.gerenciar.sjson.entity.Peugeot208\"}],\"paramsClassNames\":[\"java.lang.String\",\"me.gerenciar.sjson.entity.Peugeot208\"],\"className\":\"me.gerenciar.sjson.entity.Request\"}";
+		Request request2 = new Request().toObject(requestSource);
+		System.out.println(request2);
+		
 		
 		/*
 		// String source =

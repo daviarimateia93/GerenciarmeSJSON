@@ -95,6 +95,11 @@ public class Reader
 				
 				for(Map.Entry<String, Object> entry : map.entrySet())
 				{
+					if(instance.object == null)
+					{
+						instance.object = newInstance(map.get("className").toString());
+					}
+					
 					if(instance.object instanceof Gateway)
 					{
 						Field field = ReflectionHelper.getField(entry.getKey(), instance.object.getClass());
@@ -226,37 +231,46 @@ public class Reader
 					{
 						String mapItemAsString = mapItem.toString();
 						int indexOfMapItemSeparator = mapItemAsString.indexOf(";");
-						String mapItemType = mapItemAsString.substring(0, indexOfMapItemSeparator);
-						String mapItemValue = mapItemAsString.substring(indexOfMapItemSeparator + 1, mapItemAsString.length());
-						Class<?> mapItemTypeType = null;
+						String mapItemValue = null;
 						
-						if(instance.object == null)
+						if(indexOfMapItemSeparator > -1)
 						{
-							switch(mapItemType)
-							{
-								case Command.VALUE_TYPE_BOOLEAN:
-								{
-									mapItemTypeType = Boolean.class;
-									break;
-								}
-								
-								case Command.VALUE_TYPE_NUMBER:
-								{
-									mapItemTypeType = Double.class;
-									break;
-								}
-								
-								case Command.VALUE_TYPE_STRING:
-								{
-									mapItemTypeType = String.class;
-									break;
-								}
-							}
+							String mapItemType = mapItemAsString.substring(0, indexOfMapItemSeparator);
+							mapItemValue = mapItemAsString.substring(indexOfMapItemSeparator + 1, mapItemAsString.length());
+							Class<?> mapItemTypeType = null;
 							
-							if(mapItemTypeType != null)
+							if(instance.object == null)
 							{
-								instance.object = newInstance(mapItemTypeType);
+								switch(mapItemType)
+								{
+									case Command.VALUE_TYPE_BOOLEAN:
+									{
+										mapItemTypeType = Boolean.class;
+										break;
+									}
+									
+									case Command.VALUE_TYPE_NUMBER:
+									{
+										mapItemTypeType = Double.class;
+										break;
+									}
+									
+									case Command.VALUE_TYPE_STRING:
+									{
+										mapItemTypeType = String.class;
+										break;
+									}
+								}
+								
+								if(mapItemTypeType != null)
+								{
+									instance.object = newInstance(mapItemTypeType);
+								}
 							}
+						}
+						else
+						{
+							mapItemValue = mapItemAsString;
 						}
 						
 						instance.object = ReflectionHelper.generateBasicValue(mapItemValue, instance.object);
@@ -368,6 +382,23 @@ public class Reader
 		}
 		
 		return newInstance;
+	}
+	
+	private Object newInstance(String className)
+	{
+		try
+		{
+			if(className.contains(";"))
+			{
+				className = className.split("\\;")[1];
+			}
+			
+			return newInstance(Class.forName(className));
+		}
+		catch(ClassNotFoundException exception)
+		{
+			return null;
+		}
 	}
 	
 	private Object newInstance(Class<?> type)

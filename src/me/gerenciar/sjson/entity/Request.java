@@ -7,7 +7,7 @@ import me.gerenciar.sjson.gateway.Gateway;
 
 public class Request extends Gateway
 {
-	private static final long serialVersionUID = 1L;
+	private transient static final long serialVersionUID = 1L;
 	
 	private String className;
 	private String methodName;
