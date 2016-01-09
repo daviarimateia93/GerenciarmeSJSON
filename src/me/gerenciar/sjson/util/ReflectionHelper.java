@@ -274,7 +274,7 @@ public class ReflectionHelper
 				return type.newInstance();
 			}
 		}
-		catch(InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e)
+		catch(InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException exception)
 		{
 			return null;
 		}
