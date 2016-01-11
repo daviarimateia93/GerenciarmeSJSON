@@ -44,7 +44,9 @@ public abstract class Gateway implements Serializable
 	@SuppressWarnings("unchecked")
 	public <T extends Gateway> T toObject(String source)
 	{
-		return (T) reader.read(getClass(), source);
+		T object = (T) reader.read(getClass(), source);
+		
+		return object.className.equals(className) ? object : null;
 	}
 	
 	@Override
