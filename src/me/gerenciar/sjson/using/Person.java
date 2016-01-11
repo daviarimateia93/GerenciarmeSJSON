@@ -1,4 +1,4 @@
-package me.gerenciar.sjson.entity;
+package me.gerenciar.sjson.using;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -7,12 +7,9 @@ import java.util.List;
 import java.util.Map;
 
 import me.gerenciar.sjson.annotation.Polymorphism;
-import me.gerenciar.sjson.gateway.Gateway;
 
-public class Person extends Gateway
+public class Person
 {
-	private transient static final long serialVersionUID = 8543471302722590306L;
-	
 	public String name;
 	public Short age;
 	public Float salary;

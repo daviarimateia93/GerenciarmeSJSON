@@ -1,14 +1,10 @@
-package me.gerenciar.sjson.entity;
+package me.gerenciar.sjson.using;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import me.gerenciar.sjson.gateway.Gateway;
-
-public class Request extends Gateway
+public class Request
 {
-	private transient static final long serialVersionUID = 1L;
-	
 	private String className;
 	private String methodName;
 	private Object[] params;

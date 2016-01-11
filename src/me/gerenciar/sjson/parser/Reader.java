@@ -16,7 +16,7 @@ import java.util.Stack;
 import java.util.TreeMap;
 
 import me.gerenciar.sjson.annotation.Polymorphism;
-import me.gerenciar.sjson.gateway.Gateway;
+import me.gerenciar.sjson.util.Json;
 import me.gerenciar.sjson.util.ReflectionHelper;
 
 public class Reader
@@ -61,22 +61,35 @@ public class Reader
 	
 	}
 	
-	protected boolean isReadable(Field field, Gateway instance)
+	protected boolean isReadable(Field field, Object instance)
 	{
-		return !Modifier.isTransient(field.getModifiers());
+		return !Modifier.isTransient(field.getModifiers()) && !Modifier.isFinal(field.getModifiers());
 	}
 	
-	public <T extends Gateway> T read(Class<T> type, String source)
+	public Json read(String source)
+	{
+		return read(Json.class, source);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public <T> T read(Class<T> type, String source)
 	{
 		try
 		{
 			TreeMap<String, Object> parsedMap = parse(source);
 			
-			T instance = type.newInstance();
-			
-			read(parsedMap.get("ROOT"), new Mutable<Object>(instance), null);
-			
-			return instance;
+			if(type.isAssignableFrom(Json.class))
+			{
+				return (T) new Json(parsedMap);
+			}
+			else
+			{
+				T instance = type.newInstance();
+				
+				read(parsedMap.get("ROOT"), new Mutable<Object>(instance), null);
+				
+				return instance;
+			}
 		}
 		catch(InstantiationException | IllegalAccessException exception)
 		{
@@ -97,29 +110,26 @@ public class Reader
 				{
 					if(instance.object == null)
 					{
-						instance.object = newInstance(map.get("className").toString());
+						instance.object = newInstance(map.get("__className__").toString());
 					}
 					
-					if(instance.object instanceof Gateway)
+					Field field = ReflectionHelper.getField(entry.getKey(), instance.object.getClass());
+					
+					if(field != null)
 					{
-						Field field = ReflectionHelper.getField(entry.getKey(), instance.object.getClass());
-						
-						if(field != null)
+						if(isReadable(field, instance.object))
 						{
-							if(isReadable(field, (Gateway) instance.object))
+							field.setAccessible(true);
+							
+							Object newInstance = newInstance(field, instance.object, entry.getValue());
+							
+							if(newInstance != null)
 							{
-								field.setAccessible(true);
+								Mutable<Object> mutable = new Mutable<>(newInstance);
 								
-								Object newInstance = newInstance(field, instance.object, entry.getValue());
+								read(entry.getValue(), mutable, field.getGenericType());
 								
-								if(newInstance != null)
-								{
-									Mutable<Object> mutable = new Mutable<>(newInstance);
-									
-									read(entry.getValue(), mutable, field.getGenericType());
-									
-									field.set(instance.object, mutable.object);
-								}
+								field.set(instance.object, mutable.object);
 							}
 						}
 					}
@@ -282,10 +292,14 @@ public class Reader
 				}
 			}
 		}
-		catch(SecurityException | IllegalArgumentException | IllegalAccessException exception)
+		catch(SecurityException | IllegalArgumentException |
+		
+		IllegalAccessException exception)
+		
 		{
 			exception.printStackTrace();
 		}
+		
 	}
 	
 	protected Object newInstance(Field field, Object instance, Object mapItem)

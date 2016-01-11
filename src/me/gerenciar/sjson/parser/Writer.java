@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import me.gerenciar.sjson.gateway.Gateway;
 import me.gerenciar.sjson.util.ReflectionHelper;
 
 public class Writer
@@ -19,25 +18,32 @@ public class Writer
 	
 	public Writer()
 	{
-		
+	
 	}
 	
-	protected boolean isWritable(Field field, Gateway instance)
+	protected boolean isWritable(Field field, Object instance)
 	{
-		return !Modifier.isTransient(field.getModifiers());
+		return !Modifier.isTransient(field.getModifiers()) && !Modifier.isFinal(field.getModifiers());
 	}
 	
-	public String write(Gateway gateway)
+	public String write(Object object)
 	{
 		StringBuilder stringBuilder = new StringBuilder();
 		
+		writeObject(stringBuilder, object);
+		
+		return stringBuilder.toString();
+	}
+	
+	private void writeObject(StringBuilder stringBuilder, Object object)
+	{
 		stringBuilder.append('{');
 		
 		int serializedFields = 0;
 		
-		for(Field field : ReflectionHelper.getFields(gateway))
+		for(Field field : ReflectionHelper.getFields(object))
 		{
-			if(isWritable(field, gateway))
+			if(isWritable(field, object))
 			{
 				field.setAccessible(true);
 				
@@ -50,7 +56,7 @@ public class Writer
 					
 					stringBuilder.append("\"" + field.getName() + "\":");
 					
-					write(stringBuilder, field, gateway);
+					write(stringBuilder, field, object);
 					
 					serializedFields++;
 				}
@@ -61,9 +67,9 @@ public class Writer
 			}
 		}
 		
-		stringBuilder.append('}');
+		stringBuilder.append(",\"__className__\":\"" + object.getClass().getName() + "\"");
 		
-		return stringBuilder.toString();
+		stringBuilder.append('}');
 	}
 	
 	private void writeNull(StringBuilder stringBuilder)
@@ -162,7 +168,7 @@ public class Writer
 			{
 				stringBuilder.append("\"" + key + "\"" + ":");
 				write(stringBuilder, entry.getValue());
-			
+				
 				i++;
 			}
 		}
@@ -170,39 +176,39 @@ public class Writer
 		stringBuilder.append('}');
 	}
 	
-	private void writeString(StringBuilder stringBuilder, Object object)
+	private void writeQuoted(StringBuilder stringBuilder, Object object)
 	{
 		stringBuilder.append("\"" + object.toString() + "\"");
 	}
 	
-	private void writeCharacter(StringBuilder stringBuilder, Object object)
-	{
-		writeString(stringBuilder, object);
-	}
-	
-	private void writeNumeric(StringBuilder stringBuilder, Object object)
+	private void writeUnquoted(StringBuilder stringBuilder, Object object)
 	{
 		stringBuilder.append(object.toString());
 	}
 	
-	private void writeBoolean(StringBuilder stringBuilder, Object object)
+	private void writeString(StringBuilder stringBuilder, Object object)
 	{
-		writeNumeric(stringBuilder, object);
+		writeQuoted(stringBuilder, object);
 	}
 	
-	private void writeGateway(StringBuilder stringBuilder, Object object)
+	private void writeCharacter(StringBuilder stringBuilder, Object object)
 	{
-		writeNumeric(stringBuilder, object);
+		writeQuoted(stringBuilder, object);
+	}
+	
+	private void writeNumeric(StringBuilder stringBuilder, Object object)
+	{
+		writeUnquoted(stringBuilder, object);
+	}
+	
+	private void writeBoolean(StringBuilder stringBuilder, Object object)
+	{
+		writeUnquoted(stringBuilder, object);
 	}
 	
 	private void writeDate(StringBuilder stringBuilder, Object object)
 	{
 		writeString(stringBuilder, dateFormat.format((Date) object));
-	}
-	
-	private void writeUnknown(StringBuilder stringBuilder, Object object)
-	{
-		writeString(stringBuilder, object);
 	}
 	
 	private void write(StringBuilder stringBuilder, Field field, Object instance) throws IllegalArgumentException, IllegalAccessException
@@ -248,9 +254,9 @@ public class Writer
 		{
 			writeBoolean(stringBuilder, object);
 		}
-		else if(object instanceof Gateway)
+		else if(object instanceof Enum)
 		{
-			writeGateway(stringBuilder, object);
+			writeString(stringBuilder, ((Enum<?>) object).name());
 		}
 		else if(object instanceof Date)
 		{
@@ -258,7 +264,7 @@ public class Writer
 		}
 		else
 		{
-			writeUnknown(stringBuilder, object);
+			writeObject(stringBuilder, object);
 		}
 	}
 }
