@@ -123,7 +123,6 @@ public class Reader
 							
 							Object newInstance = newInstance(field, instance.object, entry.getValue());
 							
-							// TODO aki davi
 							if(newInstance != null)
 							{
 								Mutable<Object> mutable = new Mutable<>(newInstance);
@@ -243,6 +242,7 @@ public class Reader
 						String mapItemAsString = mapItem.toString();
 						int indexOfMapItemSeparator = mapItemAsString.indexOf(";");
 						String mapItemValue = null;
+						boolean setted = false;
 						
 						if(indexOfMapItemSeparator > -1)
 						{
@@ -273,7 +273,25 @@ public class Reader
 									}
 								}
 								
-								if(mapItemTypeType != null)
+								if(fieldGenericType != null)
+								{
+									try
+									{
+										Class<?> type = Class.forName(fieldGenericType.getTypeName());
+										
+										if(type.isEnum() && String.class.isAssignableFrom(mapItemTypeType))
+										{
+											instance.object = Enum.valueOf((Class<Enum>) type, mapItemValue);
+											
+											setted = true;
+										}
+									}
+									catch(ClassNotFoundException | IllegalArgumentException exception)
+									{
+										// ignore it
+									}
+								}
+								else if(mapItemTypeType != null)
 								{
 									instance.object = newInstance(mapItemTypeType);
 								}
@@ -284,7 +302,10 @@ public class Reader
 							mapItemValue = mapItemAsString;
 						}
 						
-						instance.object = ReflectionHelper.generateBasicValue(mapItemValue, instance.object);
+						if(!setted)
+						{
+							instance.object = ReflectionHelper.generateBasicValue(mapItemValue, instance.object);
+						}
 					}
 					else
 					{
@@ -303,7 +324,6 @@ public class Reader
 		
 	}
 	
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	protected Object newInstance(Field field, Object instance, Object mapItem)
 	{
 		Object newInstance = null;
@@ -391,24 +411,24 @@ public class Reader
 					newInstance = ReflectionHelper.generateDefaultValue(field.getType());
 				}
 			}
-			else if(field.getType().isEnum() && mapItem instanceof String)
-			{
-				try
-				{
-					field.set(instance, Enum.valueOf((Class<Enum>) field.getType(), ((String) mapItem).split("\\;")[1]));
-				}
-				catch(IllegalArgumentException | IllegalAccessException exception)
-				{
-					// ignore it
-				}
-			}
 			else
 			{
 				newInstance = newInstance(field.getType());
 			}
 		}
 		
-		return newInstance;
+		if(newInstance == null)
+		{
+			Mutable<Object> mutable = new Mutable<>(newInstance);
+			
+			read(mapItem, mutable, field.getType());
+			
+			return mutable.object;
+		}
+		else
+		{
+			return newInstance;
+		}
 	}
 	
 	private Object newInstance(String className)
