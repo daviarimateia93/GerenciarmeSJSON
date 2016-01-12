@@ -108,7 +108,7 @@ public class Reader
 				
 				for(Map.Entry<String, Object> entry : map.entrySet())
 				{
-					if(instance.object == null)
+					if(instance.object != null ? instance.object.getClass().equals(Object.class) : true)
 					{
 						instance.object = newInstance(map.get("__className__").toString());
 					}
@@ -123,6 +123,7 @@ public class Reader
 							
 							Object newInstance = newInstance(field, instance.object, entry.getValue());
 							
+							// TODO aki davi
 							if(newInstance != null)
 							{
 								Mutable<Object> mutable = new Mutable<>(newInstance);
@@ -302,6 +303,7 @@ public class Reader
 		
 	}
 	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	protected Object newInstance(Field field, Object instance, Object mapItem)
 	{
 		Object newInstance = null;
@@ -387,6 +389,17 @@ public class Reader
 				catch(ClassNotFoundException | InstantiationException | IllegalAccessException exception)
 				{
 					newInstance = ReflectionHelper.generateDefaultValue(field.getType());
+				}
+			}
+			else if(field.getType().isEnum() && mapItem instanceof String)
+			{
+				try
+				{
+					field.set(instance, Enum.valueOf((Class<Enum>) field.getType(), ((String) mapItem).split("\\;")[1]));
+				}
+				catch(IllegalArgumentException | IllegalAccessException exception)
+				{
+					// ignore it
 				}
 			}
 			else
