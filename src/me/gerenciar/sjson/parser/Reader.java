@@ -696,22 +696,25 @@ public class Reader
 					i--;
 				}
 				
-				String type = hasQuotes ? Command.VALUE_TYPE_STRING : "false".equalsIgnoreCase(attributeValue.toString()) || "true".equalsIgnoreCase(attributeValue.toString()) ? Command.VALUE_TYPE_BOOLEAN : Command.VALUE_TYPE_NUMBER;
+				String type = attributeValue.toString().trim().length() != 0 ? hasQuotes ? Command.VALUE_TYPE_STRING : "false".equalsIgnoreCase(attributeValue.toString()) || "true".equalsIgnoreCase(attributeValue.toString()) ? Command.VALUE_TYPE_BOOLEAN : Command.VALUE_TYPE_NUMBER : null;
 				
-				command.value = !hasQuotes && "null".equalsIgnoreCase(attributeValue.toString()) ? null : type + ";" + attributeValue.toString();
+				command.value = type == null ? null : !hasQuotes && "null".equalsIgnoreCase(attributeValue.toString()) ? null : type + ";" + attributeValue.toString();
 				command.action = Command.ACTION_SEPARATOR_ATTRIBUTE | Command.ACTION_END_OBJECT | Command.ACTION_END_ARRAY;
 				
-				if(mapValues.peek() instanceof TreeMap)
+				if(type != null)
 				{
-					@SuppressWarnings("unchecked")
-					TreeMap<String, Object> treeMap = (TreeMap<String, Object>) mapValues.peek();
-					treeMap.put(command.name, command.value);
-				}
-				else if(mapValues.peek() instanceof ArrayList)
-				{
-					@SuppressWarnings("unchecked")
-					ArrayList<Object> arrayList = (ArrayList<Object>) mapValues.peek();
-					arrayList.add(command.value);
+					if(mapValues.peek() instanceof TreeMap)
+					{
+						@SuppressWarnings("unchecked")
+						TreeMap<String, Object> treeMap = (TreeMap<String, Object>) mapValues.peek();
+						treeMap.put(command.name, command.value);
+					}
+					else if(mapValues.peek() instanceof ArrayList)
+					{
+						@SuppressWarnings("unchecked")
+						ArrayList<Object> arrayList = (ArrayList<Object>) mapValues.peek();
+						arrayList.add(command.value);
+					}
 				}
 			}
 			else if((Command.ACTION_SEPARATOR_ATTRIBUTE & command.action) != 0 || (Command.ACTION_END_OBJECT & command.action) != 0 || (Command.ACTION_END_ARRAY & command.action) != 0)
